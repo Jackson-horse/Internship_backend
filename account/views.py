@@ -4,6 +4,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import json
 
+from rest_framework_simplejwt.views import TokenViewBase,TokenObtainPairView as BaseTokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+
+from .serializers import TokenObtainPairSerializer
+
 @api_view(['POST'])
 def change_password(request):
     if request.method == 'POST':
@@ -29,4 +34,10 @@ def change_password(request):
         return Response(ret)
     def perform_authentication(self, request):
         pass
+
+class TokenObtainPairView(BaseTokenObtainPairView):
+    serializer_class = TokenObtainPairSerializer
+
+class TokenRefreshView(TokenViewBase):
+    serializer_class = TokenRefreshSerializer
 

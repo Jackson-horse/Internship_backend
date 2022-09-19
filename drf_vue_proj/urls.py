@@ -1,4 +1,4 @@
-from student_predict.views import(
+from account.views import(
     TokenObtainPairView,
     TokenRefreshView
 )
