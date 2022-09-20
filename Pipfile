@@ -9,6 +9,7 @@ djangorestframework = "*"
 pygments = "*"
 django-debug-toolbar = "*"
 djangorestframework-simplejwt = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 
