@@ -8,8 +8,8 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
 
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
-        if self.user.is_superuser:
-            data['is_superuser']=True
+        if self.user.is_staff:
+            data['is_staff']=True
         else:
-            data['is_superuser']=False
+            data['is_staff']=False
         return data
