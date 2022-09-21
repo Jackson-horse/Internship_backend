@@ -10,6 +10,10 @@ pygments = "*"
 django-debug-toolbar = "*"
 djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
+pandas = "*"
+numpy = "*"
+sqlalchemy = "*"
+pymysql = "*"
 
 [dev-packages]
 
