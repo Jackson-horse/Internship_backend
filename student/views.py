@@ -321,14 +321,6 @@ def course_recommendation(request):
     # 按预测分数排序
     courseNeeded0 = sorted(courseNeeded0.items(), key=lambda x: x[1], reverse=True)
 
-    
-    print(MeanRs0)
-    print(GPA)
-    print(numberOfFailedCourse)
-    print(moduleCourse)
-    print(courseNeeded0)
-
-
     # 平均分 MeanRs0
     # 平均绩点 GPA
     # 挂科数目 numberOfFailedCourse
@@ -339,5 +331,13 @@ def course_recommendation(request):
     # 算出预测分数高于100
     # courseNeeded0 排序输出最高几个
 
-    return Response("ok")
+    return_data = {}
+    return_data['MeanRs0']=MeanRs0
+    return_data['GPA']=GPA
+    return_data['numberOfFailedCourse']=numberOfFailedCourse
+    return_data['moduleCourse']=moduleCourse
+    return_data['courseNeeded0']=courseNeeded0
+
+
+    return Response(return_data)
 
