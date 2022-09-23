@@ -1,6 +1,7 @@
 from rest_framework.decorators import permission_classes,api_view
 from .permissions import IsAuthenticatedButNotAdmin
 from rest_framework.response import Response
+import json
 
 from math import sqrt
 from statistics import mean
@@ -20,10 +21,11 @@ def academic_report(request):
 
     # 1506200067  1306100176  1200002100  1200002092   1300002059  1300002067  1306100111  1400002101  1406100049
     # 1199990013  1206100067  1206100116  1400008049
-    student = 1406100049            # 要查询的学生学号
-    year = 3                        # 学年
-    semester = '1'                  # 学期
-    num = 7                         # 需要推荐的课程数量
+    data = json.loads(request.body)
+    student_num = data['student_num'] # 要查询的学生学号
+    year = data['year']  # 学年
+    semester = data['semester'] # 学期
+    course_num = data['course_num'] # 需要推荐的课程数量
     # semeter 是 str
 
     #fun()函数执行的是获取该学生同专业其他学生的信息
@@ -86,7 +88,7 @@ def academic_report(request):
 
         return df_read
 
-    majorIDEnrollSchoolYearMajorRank = getFlashmanScoreRank(student)
+    majorIDEnrollSchoolYearMajorRank = getFlashmanScoreRank(student_num)
 
 
 
@@ -195,7 +197,7 @@ def academic_report(request):
 
     # 读入新生课程成绩
     # courseID   courseName  score score2 score3  courseTypeID  moduleID
-    juniorStudentCourse = getFlashmanScore(student)
+    juniorStudentCourse = getFlashmanScore(student_num)
 
     # 记录新生修过的课程
     juniorStudentCourseS = set()
@@ -205,11 +207,11 @@ def academic_report(request):
 
     # 读入老生信息，存data
     # studentID  courseID    courseName  score
-    seniorData = getOldstudentScore(student)
+    seniorData = getOldstudentScore(student_num)
 
     # 读入新生专业的所有课程
     # courseID   courseName  avgScore  credit  courseTypeID  moduleID  courseYear courseSemester
-    coursesOfJuniorStudent = getCourse(student)
+    coursesOfJuniorStudent = getCourse(student_num)
 
     # 每门课程与其学分 ：用于统级模块修学情况
     # 课程：学分
@@ -358,7 +360,7 @@ def academic_report(request):
 
     majorRank =  majorIDEnrollSchoolYearMajorRank['majorRank'][0]
 
-    numberOfStudent = getNumber(student)
+    numberOfStudent = getNumber(student_num)
     # 根据挂科数量、绩点排名情况计算预警级别
     # 有5个level 0 1 2 3 4 取值越大学业风险越大
     def earlyWarningLevel(year, semester, numberOfFailedCourse, majorRank, numberOfStudent):
