@@ -12,18 +12,19 @@ from sqlalchemy import create_engine
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticatedButNotAdmin])
-def course_recommendation(request):
-        #'root'不用改，'password'改为自己mysql数据库密码，'localhost‘、'3306'不用改，’studnet‘为数据库名字
-    engine = create_engine("mysql+pymysql://{}:{}@{}:{}/{}".format('root', 'mysql123', 'localhost', '3306', 'storefront2'))
+def academic_report(request):
+    password = 'mysql123'
+    database_name = 'storefront2'
 
+    engine = create_engine("mysql+pymysql://{}:{}@{}:{}/{}".format('root', password, 'localhost', '3306', database_name))
 
-    # 1506200067  1306100176
-    student = 1506200067            # 要查询的学生学号
+    # 1506200067  1306100176  1200002100  1200002092   1300002059  1300002067  1306100111  1400002101  1406100049
+    # 1199990013  1206100067  1206100116  1400008049
+    student = 1406100049            # 要查询的学生学号
     year = 3                        # 学年
     semester = '1'                  # 学期
     num = 7                         # 需要推荐的课程数量
-
-
+    # semeter 是 str
 
     #fun()函数执行的是获取该学生同专业其他学生的信息
     #所有信息拼接成的一个大表
@@ -73,6 +74,41 @@ def course_recommendation(request):
         df_read = pd.read_sql_query(sql_query, engine)  # 执行查询操作，df_read 是个DataFrame对象
 
         return df_read
+
+    # 找新生绩点排名
+    def getFlashmanScoreRank(sid):
+        #SQL查询语句
+        sql_query = 'SELECT majorID, enrollSchoolYear, majorRank ' \
+                    'FROM student ' \
+                    'WHERE studentID={}'.format(sid)
+
+        df_read = pd.read_sql_query(sql_query, engine)  # 执行查询操作，df_read 是个DataFrame对象
+
+        return df_read
+
+    majorIDEnrollSchoolYearMajorRank = getFlashmanScoreRank(student)
+
+
+
+
+    #获取与学号为sid同年级同专业的学生人数
+    def getNumber(sid):
+        #SQL查询语句，查找学号为sid的同学的专业号和年级
+        sql_query = 'select majorID, enrollSchoolYear ' \
+                    'from student ' \
+                    'where studentID={0} '.format(sid)
+        df_read = pd.read_sql_query(sql_query, engine)  # 执行查询操作，df_read 是个DataFrame对象
+        majorID = df_read.values[0][0]          #获取专业号
+        grade = df_read.values[0][1]             #获取年级
+        #SQL查询语句，查询年级为grade、学号为majorID的学生人数
+        sql_query = 'SELECT count(studentID) ' \
+                    'FROM student ' \
+                    'WHERE majorID={0} AND enrollSchoolYear={1} '.format(majorID,grade)
+        df_read = pd.read_sql_query(sql_query, engine)  # 执行查询操作，df_read 是个DataFrame对象
+        number = df_read.values[0][0]           #目标人数
+        return number                   #返回待求人数
+
+
 
 
     #传入学号，查询与该学生同专业老生的成绩信息，返回一个DataFrame对象
@@ -317,27 +353,57 @@ def course_recommendation(request):
         if ss <= 100:
             courseNeeded0[item[0]] = ss
         
-
     # 按预测分数排序
     courseNeeded0 = sorted(courseNeeded0.items(), key=lambda x: x[1], reverse=True)
 
-    # 平均分 MeanRs0
-    # 平均绩点 GPA
-    # 挂科数目 numberOfFailedCourse
-    # 模块未修情况 moduleCourse
-    # 推荐课程 courseNeeded0 （可以从中选择几门）
+    majorRank =  majorIDEnrollSchoolYearMajorRank['majorRank'][0]
 
-    # semeter 是 str
-    # 算出预测分数高于100
-    # courseNeeded0 排序输出最高几个
+    numberOfStudent = getNumber(student)
+    # 根据挂科数量、绩点排名情况计算预警级别
+    # 有5个level 0 1 2 3 4 取值越大学业风险越大
+    def earlyWarningLevel(year, semester, numberOfFailedCourse, majorRank, numberOfStudent):
+        numberOfFailedCourseAllowed = year * 2 + int(semester) -1
+        l0 = 0
+        if numberOfFailedCourse == 0:
+            l0 = 0
+        elif numberOfFailedCourse <= numberOfFailedCourseAllowed / 2:
+            l0 = 1
+        elif numberOfFailedCourse <= numberOfFailedCourseAllowed:
+            l0 = 2
+        elif numberOfFailedCourse <= numberOfFailedCourseAllowed * 2:
+            l0 = 3
+        if numberOfFailedCourse > numberOfFailedCourseAllowed * 2:
+            l0 = 4
+        level = l0 / 4 * 0.5 + majorRank / numberOfStudent * 0.2
+        level = int(level / 0.2)
+        return level
 
+    level = earlyWarningLevel(year, semester, numberOfFailedCourse, majorRank, numberOfStudent)
+    gradePointRanking = majorRank / numberOfStudent
+
+    # 保留小数点后几位及改为百分数表示
+    MeanRs0 = round(MeanRs0, 2)
+    GPA = round(GPA, 3)
+    gradePointRanking = '{:.2%}'.format(gradePointRanking)
+
+    # 预警级别          level
+    # 平均绩点排名      majorRank
+    # 绩点排名百分比    gradePointRanking
+    # 平均分            MeanRs0
+    # 平均绩点          GPA
+    # 挂科数目          numberOfFailedCourse
+    # 模块未修情况      moduleCourse
+    # 推荐课程          courseNeeded0 
+
+    # 返回json
     return_data = {}
+    return_data['level']=level
+    return_data['majorRank']=majorRank
+    return_data['gradePointRanking']=gradePointRanking
     return_data['MeanRs0']=MeanRs0
     return_data['GPA']=GPA
     return_data['numberOfFailedCourse']=numberOfFailedCourse
     return_data['moduleCourse']=moduleCourse
     return_data['courseNeeded0']=courseNeeded0
-
-
     return Response(return_data)
 

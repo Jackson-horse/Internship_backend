@@ -2,5 +2,5 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('course_recommendation',course_recommendation)
+    path('academic_report',academic_report)
 ]
