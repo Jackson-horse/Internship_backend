@@ -45,8 +45,8 @@ def update_database(request):
                             'enrollID','courseName','credit','scoreRaw','score','gradePoint',
                             'score2','score3','moduleName']
             #SQL连接
-            conn = pymysql.connect(host='127.0.0.1', port=3306, database='student', user='root',
-                                password='tan123456', charset='utf8')
+            conn = pymysql.connect(host='127.0.0.1', port=3306, database=database_name, user='root',
+                                password=password, charset='utf8')
             #SQL语句清空raw_data数据表
             sql_query = 'truncate table raw_temp'
             cs1 = conn.cursor()
@@ -131,8 +131,8 @@ def update_database(request):
                 avgScoreList.append(df_read.values[i][1])
             length = len(sidList)
             #mysql数据库连接
-            conn = pymysql.connect(host='127.0.0.1', port=3306, database='student', user='root',
-                                password='tan123456', charset='utf8')
+            conn = pymysql.connect(host='127.0.0.1', port=3306, database=database_name, user='root',
+                                password=password, charset='utf8')
             #更新student表中的avgScore列
             for i in range(length):
                 sid = sidList[i]                    #学生学号
@@ -178,8 +178,8 @@ def update_database(request):
                     length = len(sidToScore)                        #保存年级为grade、专业号为majorID的学生人数
 
                     #数据库连接
-                    conn = pymysql.connect(host='127.0.0.1', port=3306, database='student', user='root',
-                                        password='tan123456', charset='utf8')
+                    conn = pymysql.connect(host='127.0.0.1', port=3306, database=database_name, user='root',
+                                        password=password, charset='utf8')
                     #更新年级为grade、专业号为majorID所有学生的Rank排名
                     for i in range(length):
                         rank = i + 1;
@@ -230,11 +230,17 @@ def update_database(request):
             number = df_read.values[0][0]           #目标人数
             return number                   #返回待求人数
 
-        ReadExcel(csv_file_path)
-        WriteToEnrollment()
-        WriteToStudent()
-        UpdateAvgScore()
-        UpdateRank()
-        CountAvgscoreOfCourse()
-                # json.dumps包装数据
-    return Response("ok")
+        return_data ={}
+        return_data['message']='success'
+        try:    
+            ReadExcel(csv_file_path)
+            WriteToEnrollment()
+            WriteToStudent()
+            UpdateAvgScore()
+            UpdateRank()
+            CountAvgscoreOfCourse()
+        except Exception as e:
+            return_data['message']=str(e)
+            return Response(return_data)
+        # json.dumps包装数据
+        return Response(return_data)

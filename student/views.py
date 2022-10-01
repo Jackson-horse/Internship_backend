@@ -397,7 +397,8 @@ def academic_report(request):
     # 模块未修情况      moduleCourse
     # 推荐课程          courseNeeded0 
 
-    # 返回json
+    # 返回json\
+    courseNeeded0 = courseNeeded0[0:course_num]
     return_data = {}
     return_data['level']=level
     return_data['majorRank']=majorRank
@@ -406,6 +407,6 @@ def academic_report(request):
     return_data['GPA']=GPA
     return_data['numberOfFailedCourse']=numberOfFailedCourse
     return_data['moduleCourse']=moduleCourse
-    return_data['courseNeeded0']=courseNeeded0
+    return_data['courseNeeded']=courseNeeded0
     return Response(return_data)
 

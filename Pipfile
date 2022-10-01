@@ -14,6 +14,7 @@ pandas = "*"
 numpy = "*"
 sqlalchemy = "*"
 pymysql = "*"
+cryptography = "*"
 
 [dev-packages]
 
